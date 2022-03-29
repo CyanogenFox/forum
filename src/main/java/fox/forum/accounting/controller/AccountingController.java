@@ -1,6 +1,6 @@
 package fox.forum.accounting.controller;
 
-import java.util.Base64;
+import java.security.Principal;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,14 +31,8 @@ public class AccountingController {
 	}
 
 	@PostMapping("/login")
-	public UserResponseDto login(@RequestHeader("Authorization") String token) {
-		return service.login(getLoginFromToken(token));
-	}
-
-	private String getLoginFromToken(String token) {
-		token = token.split(" ")[1];
-		String decode = new String(Base64.getDecoder().decode(token));
-		return decode.split(":")[0];
+	public UserResponseDto login(Principal principal) {
+		return service.login(principal.getName());
 	}
 
 	@DeleteMapping("/user/{login}")
@@ -62,8 +56,7 @@ public class AccountingController {
 	}
 
 	@PutMapping("/password")
-	public void changePassword(@RequestHeader("Authorization") String token,
-			@RequestHeader("X-Password") String newPassword) {
-		service.changePassword(getLoginFromToken(token), newPassword);
+	public void changePassword(Principal principal, @RequestHeader("X-Password") String newPassword) {
+		service.changePassword(principal.getName(), newPassword);
 	}
 }

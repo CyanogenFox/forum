@@ -1,9 +1,10 @@
 package fox.forum.accounting.service;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import fox.forum.accounting.dao.AccountigRepository;
+import fox.forum.accounting.dao.AccountingRepository;
 import fox.forum.accounting.dto.RoleResponseDto;
 import fox.forum.accounting.dto.UpdateDto;
 import fox.forum.accounting.dto.UserRegDto;
@@ -16,7 +17,7 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class AccountServiceImpl implements AccountService {
-	AccountigRepository repository;
+	AccountingRepository repository;
 	ModelMapper mapper;
 
 	@Override
@@ -24,6 +25,8 @@ public class AccountServiceImpl implements AccountService {
 		if (repository.existsById(regDto.getLogin()))
 			throw new UserDublicateFoundException(regDto.getLogin());
 		User user = mapper.map(regDto, User.class);
+		String password = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+		user.setPassword(password);
 		repository.save(user);
 		return mapper.map(user, UserResponseDto.class);
 	}
@@ -56,20 +59,22 @@ public class AccountServiceImpl implements AccountService {
 	@Override
 	public RoleResponseDto changeRoles(String login, String role, boolean isAddRole) {
 		User user = findUser(login);
+		boolean res;
 		if (isAddRole) {
-			user.addRole(role);
-			repository.save(user);
+			res = user.addRole(role);
 		} else {
-			user.removeRole(role);
-			repository.save(user);
+			res = user.removeRole(role);
 		}
+		if (res)
+			repository.save(user);
 		return mapper.map(user, RoleResponseDto.class);
 	}
 
 	@Override
 	public void changePassword(String login, String newPassword) {
 		User user = findUser(login);
-		user.setPassword(newPassword);
+		String password = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+		user.setPassword(password);
 		repository.save(user);
 	}
 

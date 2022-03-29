@@ -4,7 +4,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import fox.forum.accounting.model.User;
 
-public interface AccountigRepository
+public interface AccountingRepository
 		extends MongoRepository<User, String> {
 
 }
